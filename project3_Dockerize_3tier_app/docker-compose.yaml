@@ -1,0 +1,55 @@
+services:
+  mysql-db:
+    image: mysql:8.0
+    container_name: mysql-db
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: mydb
+      MYSQL_USER: user
+      MYSQL_PASSWORD: userpassword
+    volumes:
+      - ./db/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - db_net
+
+  php-app:
+    build: ./app
+    container_name: php-app
+    depends_on:
+      - mysql-db
+    networks:
+      - app_net
+      - db_net
+
+  nginx-frontend1:
+    image: nginx:latest
+    container_name: nginx-frontend1
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php-app
+    ports:
+      - "8080:80"
+    networks:
+      - web_net
+      - app_net
+
+  nginx-frontend2:
+    image: nginx:latest
+    container_name: nginx-frontend2
+    volumes:
+      - ./frontend:/usr/share/nginx/html
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+    depends_on:
+      - php-app
+    ports:
+      - "8081:80"
+    networks:
+      - web_net
+      - app_net
+
+networks:
+  web_net:
+  app_net:
+  db_net:
